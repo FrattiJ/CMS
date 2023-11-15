@@ -1,10 +1,18 @@
 // Required modules
-const mysql = require('mysql2');
-const inquirer = require('inquirer');
 require('dotenv').config();
+const inquirer = require('inquirer');
+const express = require('express');
+const mysql = require('mysql2');
+
+const PORT = process.env.PORT || 3001;
+const app = express();
+
+// Express middleware
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 // MySQL connection
-const connection = mysql.createConnection({
+const db = mysql.createConnection({
   host: 'localhost',
   user: `${process.env.DB_USER}`,
   password: `${process.env.DB_PASSWORD}`,
@@ -12,8 +20,7 @@ const connection = mysql.createConnection({
 });
 
 // Connect to the database
-connection.connect(err => {
-  if (err) throw err;
+db.connect(err => {
   console.log('Connected to MySQL database');
   startApp();
 });
@@ -67,7 +74,7 @@ function startApp() {
           break;
 
         case 'Exit':
-          connection.end();
+          db.end();
           break;
 
         default:
@@ -80,28 +87,31 @@ function startApp() {
 
 // Functions for each inquirer selection
 function viewAllDepartments() {
-  connection.query('SELECT * FROM department', (err, res) => {
-    if (err) throw err;
-    console.table(res);
+  db.query('SELECT * FROM department', (err, result) => {
+    if (err) {
+        console.log(err);
+      }
+      console.log(result);
     startApp();
   });
 };
 
 function viewAllRoles() {
-    connection.query('SELECT * FROM role', (err, res) => {
-      if (err) throw err;
-      console.table(res);
+    connection.query('SELECT * FROM role', (err, result) => {
+        if (err) {
+            console.log(err);
+          }
+          console.log(result);
       startApp();
     });
   };
 
   function viewAllEmployees() {
-    connection.query('SELECT * FROM employee', (err, res) => {
-      if (err) throw err;
-      console.table(res);
+    connection.query('SELECT * FROM employee', (err, result) => {
+        if (err) {
+            console.log(err);
+          }
+          console.log(result);
       startApp();
     });
   };
-
-// Call function to start app
-startApp();
