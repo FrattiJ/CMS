@@ -1,28 +1,24 @@
 // Required modules
 require('dotenv').config();
 const inquirer = require('inquirer');
-const express = require('express');
 const mysql = require('mysql2');
-
-const PORT = process.env.PORT || 3001;
-const app = express();
-
-// middleware
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
 
 // MySQL connection
 const db = mysql.createConnection({
-  host: 'localhost',
-  user: `${process.env.DB_USER}`,
-  password: `${process.env.DB_PASSWORD}`,
-  database: `${process.env.DB_NAME}`,
+  host: '127.0.0.1',
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
 });
 
 // Connect to the database
 db.connect(err => {
+  if(err) {
+    console.log(err)
+  } else {
   console.log('Connected to MySQL database');
   startApp();
+  }
 });
 
 function startApp() {
@@ -97,7 +93,7 @@ function viewAllDepartments() {
 };
 
 function viewAllRoles() {
-    connection.query('SELECT * FROM role', (err, result) => {
+    db.query('SELECT * FROM role', (err, result) => {
         if (err) {
             console.log(err);
           }
@@ -107,7 +103,7 @@ function viewAllRoles() {
   };
 
   function viewAllEmployees() {
-    connection.query('SELECT * FROM employee', (err, result) => {
+    db.query('SELECT * FROM employee', (err, result) => {
         if (err) {
             console.log(err);
           }
