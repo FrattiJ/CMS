@@ -7,7 +7,7 @@ const mysql = require('mysql2');
 const PORT = process.env.PORT || 3001;
 const app = express();
 
-// Express middleware
+// middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
