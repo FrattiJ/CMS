@@ -81,7 +81,7 @@ function startApp() {
     });
 }
 
-// Functions for each inquirer selection
+// Functions for view inquirer prompts
 function viewAllDepartments() {
   db.query('SELECT * FROM departments', (err, result) => {
     if (err) {
@@ -112,6 +112,7 @@ function viewAllEmployees() {
   });
 };
 
+// functions to add from inquirer prompts
 function addDepartment() {
   inquirer.prompt({
     name: 'departmentName',
@@ -172,6 +173,125 @@ function addRole() {
             startApp();
           }
         );
+      });
+    }
+  });
+}
+
+function addEmployee() {
+  db.query('SELECT id, title FROM roles', (err, roleResults) => {
+    if (err) {
+      console.log(err);
+      startApp();
+    } else {
+      const roles = roleResults.map(role => role.title);
+
+      db.query('SELECT id, CONCAT(first_name, " ", last_name) AS manager FROM employees', (err, employeeResults) => {
+        if (err) {
+          console.log(err);
+          startApp();
+        } else {
+          const managers = employeeResults.map(employee => employee.manager);
+
+          inquirer.prompt([
+            {
+              name: 'firstName',
+              type: 'input',
+              message: 'Enter the first name of the employee:'
+            },
+            {
+              name: 'lastName',
+              type: 'input',
+              message: 'Enter the last name of the employee:'
+            },
+            {
+              name: 'role',
+              type: 'list',
+              message: 'Select the role for the employee:',
+              choices: roles
+            },
+            {
+              name: 'manager',
+              type: 'list',
+              message: 'Select the manager for the employee:',
+              choices: ['None'].concat(managers)
+            }
+          ]).then(answers => {
+            const { firstName, lastName, role, manager } = answers;
+
+            let roleId = roleResults.find(r => r.title === role).id;
+            let managerId = null;
+
+            if (manager !== 'None') {
+              managerId = employeeResults.find(emp => emp.manager === manager).id;
+            }
+
+            db.query(
+              'INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)',
+              [firstName, lastName, roleId, managerId],
+              (err, result) => {
+                if (err) {
+                  console.log(err);
+                } else {
+                  console.log(`Employee '${firstName} ${lastName}' added successfully.`);
+                }
+                startApp();
+              }
+            );
+          });
+        }
+      });
+    }
+  });
+}
+
+function updateEmployeeRole() {
+  db.query('SELECT id, CONCAT(first_name, " ", last_name) AS employee FROM employees', (err, employeeResults) => {
+    if (err) {
+      console.log(err);
+      startApp();
+    } else {
+      const employees = employeeResults.map(employee => employee.employee);
+
+      db.query('SELECT id, title FROM roles', (err, roleResults) => {
+        if (err) {
+          console.log(err);
+          startApp();
+        } else {
+          const roles = roleResults.map(role => role.title);
+
+          inquirer.prompt([
+            {
+              name: 'employee',
+              type: 'list',
+              message: 'Select the employee you want to update:',
+              choices: employees
+            },
+            {
+              name: 'newRole',
+              type: 'list',
+              message: 'Select the new role for the employee:',
+              choices: roles
+            }
+          ]).then(answers => {
+            const { employee, newRole } = answers;
+            const employeeId = employeeResults.find(emp => emp.employee === employee).id;
+            const roleId = roleResults.find(role => role.title === newRole).id;
+
+            db.query(
+              'UPDATE employees SET role_id = ? WHERE id = ?',
+              [roleId, employeeId],
+              (err, result) => {
+                if (err) {
+                  console.log(err);
+                } else {
+                  console.log(`Employee '${employee}' role updated to '${newRole}' successfully.`);
+                }
+                startApp();
+              }
+            );
+          });
+        }
       });
     }
   });
