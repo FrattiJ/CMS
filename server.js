@@ -13,11 +13,11 @@ const db = mysql.createConnection({
 
 // Connect to the database
 db.connect(err => {
-  if(err) {
+  if (err) {
     console.log(err)
   } else {
-  console.log('Connected to MySQL database');
-  startApp();
+    console.log('Connected to MySQL database');
+    startApp();
   }
 });
 
@@ -83,31 +83,96 @@ function startApp() {
 
 // Functions for each inquirer selection
 function viewAllDepartments() {
-  db.query('SELECT * FROM department', (err, result) => {
+  db.query('SELECT * FROM departments', (err, result) => {
     if (err) {
-        console.log(err);
-      }
-      console.log(result);
+      console.log(err);
+    }
+    console.log(result);
     startApp();
   });
 };
 
 function viewAllRoles() {
-    db.query('SELECT * FROM role', (err, result) => {
-        if (err) {
-            console.log(err);
-          }
-          console.log(result);
-      startApp();
-    });
-  };
+  db.query('SELECT * FROM roles', (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+    console.log(result);
+    startApp();
+  });
+};
 
-  function viewAllEmployees() {
-    db.query('SELECT * FROM employee', (err, result) => {
-        if (err) {
-            console.log(err);
-          }
-          console.log(result);
+function viewAllEmployees() {
+  db.query('SELECT * FROM employees', (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+    console.log(result);
+    startApp();
+  });
+};
+
+function addDepartment() {
+  inquirer.prompt({
+    name: 'departmentName',
+    type: 'input',
+    message: 'Enter the name of the department:'
+  }).then(answer => {
+    const departmentName = answer.departmentName;
+
+    db.query('INSERT INTO departments (name) VALUES (?)', [departmentName], (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(`Department '${departmentName}' added successfully.`);
+      }
       startApp();
     });
-  };
+  })
+};
+
+function addRole() {
+  db.query('SELECT id, name FROM departments', (err, results) => {
+    if (err) {
+      console.log(err);
+      startApp();
+    } else {
+      const departments = results.map(department => department.name);
+
+      inquirer.prompt([
+        {
+          name: 'roleName',
+          type: 'input',
+          message: 'Enter the name of the role:'
+        },
+        {
+          name: 'salary',
+          type: 'input',
+          message: 'Enter the salary for the role:'
+        },
+        {
+          name: 'department',
+          type: 'list',
+          message: 'Select the department for the role:',
+          choices: departments
+        }
+      ]).then(answers => {
+        const { roleName, salary, department } = answers;
+        const departmentId = results.find(dep => dep.name === department).id;
+
+        db.query(
+          'INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)',
+          [roleName, salary, departmentId],
+          (err, result) => {
+            if (err) {
+              console.log(err);
+            } else {
+              console.log(`Role '${roleName}' added successfully.`);
+            }
+            startApp();
+          }
+        );
+      });
+    }
+  });
+}
